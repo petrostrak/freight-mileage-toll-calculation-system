@@ -5,3 +5,12 @@ Freight Mileage Toll Calculation System is an innovative solution tailored for t
 ### Microservice Outline
 ________________________________________________________________
 ![alt](https://github.com/petrostrak/freight-mileage-toll-calculation-system/blob/main/mircoservice.png)
+
+#### Breakdown
+*   A truck is sending its coordinates to the `Receiver`.
+*   `Receiver`'s job is to get all the signals from the trucks that are driving on a paid road and send them to a `Kafka` queue. We have chosen Kafka in order not to lose any data in the process.
+*   `Kafka` then is going to send the coordinates to the `Distance Calculator`.   
+*   `Distance Calculator` is going to parse the coordinates and calculate the total distance the trucks have done. Afterwards, the results are going to be sent to the `Invoicer`.
+*   `Invoicer` is going to call the service `Invoicer Calculator` that will calculate the amount paid based on the distance, the type of truck, the taxes and license plates of the vehicle.
+*   The `Invoicer Calculator` will then return the total amount to the `Invoicer` and the latter will store the data to the `DB`.
+*   The`Front End` is going to have the posibility to first check the cost beforehand by calling the `Invoicer Calculator` service and second to fetch invoice data back from the `DB` via the `Invoicer`.
