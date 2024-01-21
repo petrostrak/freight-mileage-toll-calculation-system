@@ -4,4 +4,4 @@ Freight Mileage Toll Calculation System is an innovative solution tailored for t
 
 ### Microservice Outline
 ________________________________________________________________
-![alt](https://github.com/petrostrak/freight-mileage-toll-calculation-system/tree/blob/main/microservice.png)
+![alt](https://github.com/petrostrak/freight-mileage-toll-calculation-system/blob/main/mircoservice.png)
