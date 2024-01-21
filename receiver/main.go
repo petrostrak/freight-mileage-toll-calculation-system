@@ -22,7 +22,7 @@ type Receiver struct {
 
 func NewReceiver() *Receiver {
 	return &Receiver{
-		msg: make(chan types.OBUData, 128),
+		msg: make(chan types.OBUData),
 	}
 }
 
@@ -39,6 +39,9 @@ func (rcv *Receiver) wsHandler(w http.ResponseWriter, r *http.Request) {
 
 	rcv.conn = conn
 	go rcv.wsReceiveLoop()
+	for data := range rcv.msg {
+		fmt.Printf("recv'd OBU data from [%d]:: <lat %.2f long %2.f>\n", data.OBUID, data.Lat, data.Long)
+	}
 }
 
 func (rcv *Receiver) wsReceiveLoop() {
@@ -49,7 +52,6 @@ func (rcv *Receiver) wsReceiveLoop() {
 			log.Println("read error:", err)
 			continue
 		}
-		fmt.Printf("recv'd OBU data from [%d]:: <lat %.2f long %2.f>\n", data.OBUID, data.Lat, data.Long)
 		rcv.msg <- data
 	}
 }
