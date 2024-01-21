@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 )
@@ -21,9 +22,35 @@ func genCoord() float64 {
 	return n + f
 }
 
+func genLatLong() (float64, float64) {
+	return genCoord(), genCoord()
+}
+
+func generateOBUIDS(n int) []int {
+	ids := make([]int, n)
+	for i := 0; i < n; i++ {
+		ids[i] = rand.Intn(math.MaxInt)
+	}
+
+	return ids
+}
+
+func init() {
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+}
+
 func main() {
+	obuids := generateOBUIDS(20)
 	for {
-		fmt.Println(genCoord())
+		for i := 0; i < len(obuids); i++ {
+			lat, long := genLatLong()
+			data := OBUData{
+				OBUID: obuids[i],
+				Lat:   lat,
+				Long:  long,
+			}
+			fmt.Printf("%+v\n", data)
+		}
 		time.Sleep(sendInterval)
 	}
 }
