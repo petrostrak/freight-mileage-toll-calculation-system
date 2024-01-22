@@ -14,3 +14,13 @@ ________________________________________________________________
 *   `Invoicer` is going to call the service `Invoicer Calculator` that will calculate the amount paid based on the distance, the type of truck, the taxes and license plates of the vehicle.
 *   The `Invoicer Calculator` will then return the total amount to the `Invoicer` and the latter will store the data to the `DB`.
 *   The`Front End` is going to have the posibility to first check the cost beforehand by calling the `Invoicer Calculator` service and second to fetch invoice data back from the `DB` via the `Invoicer`.
+
+### Workflow instructions
+First we need to launch the `Receiver` to be ready to receive data from the `OBU`:
+```bash
+make receiver
+```
+Then we start the `OBU` simulation:
+```bash
+make obu
+```
