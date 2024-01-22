@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
@@ -53,11 +52,10 @@ func (c *KafkaConsumer) readMessageLoop() {
 			continue
 		}
 
-		distance, err := c.calculatorService.CalculateDistance(data)
+		_, err = c.calculatorService.CalculateDistance(data)
 		if err != nil {
 			logrus.Errorf("calculation error: %s", err)
 			continue
 		}
-		fmt.Printf("Distance: %.2f\n", distance)
 	}
 }

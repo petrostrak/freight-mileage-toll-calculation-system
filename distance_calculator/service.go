@@ -14,7 +14,7 @@ type CalculatorService struct {
 	prevPoint []float64
 }
 
-func NewCalculatorService() *CalculatorService {
+func NewCalculatorService() Calculator {
 	return &CalculatorService{}
 }
 
