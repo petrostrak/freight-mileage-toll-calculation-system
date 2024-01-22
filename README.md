@@ -20,6 +20,10 @@ First we need to launch the `Receiver` to be ready to receive data from the `OBU
 ```bash
 make receiver
 ```
+Then the `Distance Calculator`:
+```bash
+make distance_calculator
+```
 Then we start the `OBU` simulation:
 ```bash
 make obu
