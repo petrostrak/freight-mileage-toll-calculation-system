@@ -1,18 +1,21 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
 	"github.com/sirupsen/logrus"
 )
 
 type KafkaConsumer struct {
-	consumer  *kafka.Consumer
-	isRunning bool
+	consumer          *kafka.Consumer
+	isRunning         bool
+	calculatorService Calculator
 }
 
-func NewKafkaConsumer(topic string) (*KafkaConsumer, error) {
+func NewKafkaConsumer(topic string, srv Calculator) (*KafkaConsumer, error) {
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": "localhost",
 		"group.id":          "myGroup",
@@ -25,7 +28,8 @@ func NewKafkaConsumer(topic string) (*KafkaConsumer, error) {
 	c.SubscribeTopics([]string{topic}, nil)
 
 	return &KafkaConsumer{
-		consumer: c,
+		consumer:          c,
+		calculatorService: srv,
 	}, nil
 }
 
@@ -42,6 +46,18 @@ func (c *KafkaConsumer) readMessageLoop() {
 			logrus.Errorf("kafka consume erro %s", err)
 			continue
 		}
-		fmt.Println(msg)
+
+		var data types.OBUData
+		if err := json.Unmarshal(msg.Value, &data); err != nil {
+			logrus.Errorf("JSON serialization error: %s", err)
+			continue
+		}
+
+		distance, err := c.calculatorService.CalculateDistance(data)
+		if err != nil {
+			logrus.Errorf("calculation error: %s", err)
+			continue
+		}
+		fmt.Printf("Distance: %2.f\n", distance)
 	}
 }
