@@ -35,7 +35,7 @@ func NewReceiver() (*Receiver, error) {
 
 	return &Receiver{
 		// msg:  make(chan types.OBUData),
-		prod: p,
+		prod: NewLogMiddleware(p),
 	}, nil
 }
 
