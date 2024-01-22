@@ -4,5 +4,5 @@ obu:
 	@./bin/obu
 
 reveiver:
-	@go build -o bin/receiver receiver/main.go
+	@go build -o bin/receiver ./receiver
 	@./bin/receiver

@@ -1,12 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gorilla/websocket"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
 )
@@ -18,7 +16,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer recv.prod.Close()
 
 	http.HandleFunc("/ws", recv.wsHandler)
 	http.ListenAndServe(":30000", nil)
@@ -27,28 +24,14 @@ func main() {
 type Receiver struct {
 	// msg  chan types.OBUData
 	conn *websocket.Conn
-	prod *kafka.Producer
+	prod DataProducer
 }
 
 func NewReceiver() (*Receiver, error) {
-	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
+	p, err := NewKafkaProducer()
 	if err != nil {
 		return nil, err
 	}
-
-	// Delivery report handler for produced messages
-	go func() {
-		for e := range p.Events() {
-			switch ev := e.(type) {
-			case *kafka.Message:
-				if ev.TopicPartition.Error != nil {
-					fmt.Printf("Delivery failed: %v\n", ev.TopicPartition)
-				} else {
-					fmt.Printf("Delivered message to %v\n", ev.TopicPartition)
-				}
-			}
-		}
-	}()
 
 	return &Receiver{
 		// msg:  make(chan types.OBUData),
@@ -90,18 +73,5 @@ func (rcv *Receiver) wsReceiveLoop() {
 }
 
 func (rcv *Receiver) produceData(data types.OBUData) error {
-	b, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	err = rcv.prod.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{
-			Topic:     &kafkaTopic,
-			Partition: kafka.PartitionAny,
-		},
-		Value: b,
-	}, nil)
-
-	return err
+	return rcv.prod.ProduceData(data)
 }
