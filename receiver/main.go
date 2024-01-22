@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,14 +11,30 @@ import (
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
 )
 
-func main() {
+var kafkaTopic = "obuTopic"
 
+func main() {
+	recv, err := NewReceiver()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer recv.prod.Close()
+
+	http.HandleFunc("/ws", recv.wsHandler)
+	http.ListenAndServe(":30000", nil)
+}
+
+type Receiver struct {
+	// msg  chan types.OBUData
+	conn *websocket.Conn
+	prod *kafka.Producer
+}
+
+func NewReceiver() (*Receiver, error) {
 	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-
-	defer p.Close()
 
 	// Delivery report handler for produced messages
 	go func() {
@@ -33,29 +50,10 @@ func main() {
 		}
 	}()
 
-	// Produce messages to topic (asynchronously)
-	topic := "myTopic"
-	for i := 0; i < 10; i++ {
-		p.Produce(&kafka.Message{
-			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Value:          []byte("test producing message"),
-		}, nil)
-	}
-
-	recv := NewReceiver()
-	http.HandleFunc("/ws", recv.wsHandler)
-	http.ListenAndServe(":30000", nil)
-}
-
-type Receiver struct {
-	msg  chan types.OBUData
-	conn *websocket.Conn
-}
-
-func NewReceiver() *Receiver {
 	return &Receiver{
-		msg: make(chan types.OBUData),
-	}
+		// msg:  make(chan types.OBUData),
+		prod: p,
+	}, nil
 }
 
 func (rcv *Receiver) wsHandler(w http.ResponseWriter, r *http.Request) {
@@ -71,9 +69,9 @@ func (rcv *Receiver) wsHandler(w http.ResponseWriter, r *http.Request) {
 
 	rcv.conn = conn
 	go rcv.wsReceiveLoop()
-	for data := range rcv.msg {
-		fmt.Printf("recv'd OBU data from [%d]:: <lat %.2f long %2.f>\n", data.OBUID, data.Lat, data.Long)
-	}
+	// for data := range rcv.msg {
+	// 	fmt.Printf("recv'd OBU data from [%d]:: <lat %.2f long %2.f>\n", data.OBUID, data.Lat, data.Long)
+	// }
 }
 
 func (rcv *Receiver) wsReceiveLoop() {
@@ -84,6 +82,26 @@ func (rcv *Receiver) wsReceiveLoop() {
 			log.Println("read error:", err)
 			continue
 		}
-		rcv.msg <- data
+		// rcv.msg <- data
+		if err := rcv.produceData(data); err != nil {
+			fmt.Printf("kafka produceData error: %s\n", err)
+		}
 	}
+}
+
+func (rcv *Receiver) produceData(data types.OBUData) error {
+	b, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	err = rcv.prod.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{
+			Topic:     &kafkaTopic,
+			Partition: kafka.PartitionAny,
+		},
+		Value: b,
+	}, nil)
+
+	return err
 }
