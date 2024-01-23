@@ -15,6 +15,7 @@ func main() {
 
 	store := NewMemoryStore()
 	svc := NewInvoiceAggregator(store)
+	svc = NewLogMiddleware(svc)
 
 	if err := makeHTTPTransport(*addr, svc); err != nil {
 		panic(err)
