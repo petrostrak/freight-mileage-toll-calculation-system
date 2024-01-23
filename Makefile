@@ -11,3 +11,7 @@ reveiver:
 distance_calculator:
 	@go build -o bin/distance_calculator ./distance_calculator
 	@./bin/distance_calculator
+
+invoicer:
+	@go build -o bin/aggregator ./aggregator
+	@./bin/aggregator
