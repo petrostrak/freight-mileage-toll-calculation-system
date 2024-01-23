@@ -25,6 +25,6 @@ func NewInvoiceAggregator(store Storer) *InvoiceAggregator {
 }
 
 func (i *InvoiceAggregator) AggregateDistance(distance types.Distance) error {
-	fmt.Println("processing and inserting distance in DB")
+	fmt.Println("processing and inserting distance in DB", distance)
 	return i.store.Insert(distance)
 }
