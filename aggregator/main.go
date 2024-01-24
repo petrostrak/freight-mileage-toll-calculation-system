@@ -25,8 +25,18 @@ func main() {
 func makeHTTPTransport(addr string, svc Aggregator) error {
 	fmt.Println("HTTP transport running on port ", addr)
 	http.HandleFunc("/aggregate", handleAggregate(svc))
+	http.HandleFunc("/invoice", handleInvoice)
 
 	return http.ListenAndServe(addr, nil)
+}
+
+func handleInvoice(w http.ResponseWriter, r *http.Request) {
+	obuID := r.URL.Query().Get("obu_ID")
+	if obuID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing OBUID"})
+		return
+	}
+	w.Write([]byte(obuID))
 }
 
 func handleAggregate(svc Aggregator) http.HandlerFunc {
