@@ -16,13 +16,13 @@ ________________________________________________________________
 *   The`Front End` is going to have the posibility to first check the cost beforehand by calling the `Invoicer Calculator` service and second to fetch invoice data back from the `DB` via the `Invoicer`.
 
 ### Workflow instructions
-First we need to launch the `Receiver` to be ready to receive data from the `OBU`:
-```bash
-make receiver
-```
-Then the `Distance Calculator`:
+First we launch the `Distance Calculator`:
 ```bash
 make distance_calculator 
+```
+Then we need to launch the `Receiver` to be ready to receive data from the `OBU`:
+```bash
+make receiver
 ```
 Then the `Invoicer Calculator` aka  `Aggregator`:
 ```bash
@@ -31,4 +31,8 @@ make aggregator
 Then we start the `OBU` simulation:
 ```bash
 make obu
+```
+Now, based on a `obu_ID` we can make a request to the `Invoicer Calculator` and get the total distance and amount:
+```bash
+curl http://localhost:3000/invoice?obu_ID=6650711713076780301
 ```

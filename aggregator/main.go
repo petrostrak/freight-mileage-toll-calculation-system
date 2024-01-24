@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
 )
@@ -25,18 +26,33 @@ func main() {
 func makeHTTPTransport(addr string, svc Aggregator) error {
 	fmt.Println("HTTP transport running on port ", addr)
 	http.HandleFunc("/aggregate", handleAggregate(svc))
-	http.HandleFunc("/invoice", handleInvoice)
+	http.HandleFunc("/invoice", handleInvoice(svc))
 
 	return http.ListenAndServe(addr, nil)
 }
 
-func handleInvoice(w http.ResponseWriter, r *http.Request) {
-	obuID := r.URL.Query().Get("obu_ID")
-	if obuID == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing OBUID"})
-		return
+func handleInvoice(svc Aggregator) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		obuID := r.URL.Query().Get("obu_ID")
+		if obuID == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing OBUID"})
+			return
+		}
+
+		id, err := strconv.Atoi(obuID)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid OBUID"})
+			return
+		}
+
+		invoice, err := svc.CalculateInvoice(id)
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+
+		writeJSON(w, http.StatusOK, invoice)
 	}
-	w.Write([]byte(obuID))
 }
 
 func handleAggregate(svc Aggregator) http.HandlerFunc {

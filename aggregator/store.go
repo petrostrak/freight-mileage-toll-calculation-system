@@ -1,6 +1,10 @@
 package main
 
-import "github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
+import (
+	"fmt"
+
+	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
+)
 
 type MemoryStore struct {
 	data map[int]float64
@@ -15,4 +19,13 @@ func NewMemoryStore() *MemoryStore {
 func (m *MemoryStore) Insert(d types.Distance) error {
 	m.data[d.OBUID] += d.Value
 	return nil
+}
+
+func (m *MemoryStore) Get(id int) (float64, error) {
+	distance, ok := m.data[id]
+	if !ok {
+		return 0.0, fmt.Errorf("could not find distance for obu_ID %d", id)
+	}
+
+	return distance, nil
 }
