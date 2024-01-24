@@ -22,7 +22,11 @@ make receiver
 ```
 Then the `Distance Calculator`:
 ```bash
-make distance_calculator
+make distance_calculator 
+```
+Then the `Invoicer Calculator` aka  `Aggregator`:
+```bash
+make aggregator
 ```
 Then we start the `OBU` simulation:
 ```bash
