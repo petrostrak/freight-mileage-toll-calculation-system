@@ -2,18 +2,19 @@ package main
 
 import (
 	"log"
+
+	"github.com/petrostrak/freight-mileage-toll-calculation-system/aggregator/client"
 )
 
-// type DistanceCalculator struct {
-// 	consumer DataConsumer
-// }
-
-const kafkaTopic = "obuData"
+const (
+	kafkaTopic         = "obuData"
+	aggregatorEndpoint = "http://127.0.0.1:3000/aggregate"
+)
 
 func main() {
 	srv := NewCalculatorService()
 	srv = NewLogMiddleware(srv)
-	kafkaConsmuser, err := NewKafkaConsumer(kafkaTopic, srv)
+	kafkaConsmuser, err := NewKafkaConsumer(kafkaTopic, srv, client.NewClient(aggregatorEndpoint))
 	if err != nil {
 		log.Fatal(err)
 	}
