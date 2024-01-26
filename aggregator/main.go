@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
-	grpcTypes "github.com/petrostrak/freight-mileage-toll-calculation-system/types"
+	"github.com/petrostrak/freight-mileage-toll-calculation-system/proto"
 	"google.golang.org/grpc"
 )
 
@@ -38,7 +38,7 @@ func makeGRPCTransport(addr string, svc Aggregator) error {
 	defer ln.Close()
 
 	server := grpc.NewServer([]grpc.ServerOption{}...)
-	grpcTypes.RegisterAggregatorServer(server, NewGRPCAggregatorServer(svc))
+	proto.RegisterAggregatorServer(server, NewGRPCAggregatorServer(svc))
 	return server.Serve(ln)
 }
 

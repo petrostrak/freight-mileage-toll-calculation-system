@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.25.2
-// source: types/ptypes.proto
+// source: proto/ptypes.proto
 
-package types
+package proto
 
 import (
 	context "context"
@@ -105,5 +105,5 @@ var Aggregator_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "types/ptypes.proto",
+	Metadata: "proto/ptypes.proto",
 }
