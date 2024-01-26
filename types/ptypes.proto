@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "github.com/petrostrak/freight-mileage-toll-calculation-system/types";
+
+message None {}
+
+message AggregateDistanceRequest{
+    int32 ObuID = 1;
+    double Value = 2;
+    int64 Unix = 3;
+}
+
+service AggregateDistanceService{
+    rpc DistanceAggregator(AggregateDistanceRequest) returns (None);
+}
