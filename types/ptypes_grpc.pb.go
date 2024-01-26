@@ -19,90 +19,89 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	AggregateDistanceService_DistanceAggregator_FullMethodName = "/AggregateDistanceService/DistanceAggregator"
+	Aggregator_Aggregate_FullMethodName = "/Aggregator/Aggregate"
 )
 
-// AggregateDistanceServiceClient is the client API for AggregateDistanceService service.
+// AggregatorClient is the client API for Aggregator service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type AggregateDistanceServiceClient interface {
-	DistanceAggregator(ctx context.Context, in *AggregateDistanceRequest, opts ...grpc.CallOption) (*None, error)
+type AggregatorClient interface {
+	Aggregate(ctx context.Context, in *AggregateRequest, opts ...grpc.CallOption) (*None, error)
 }
 
-type aggregateDistanceServiceClient struct {
+type aggregatorClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewAggregateDistanceServiceClient(cc grpc.ClientConnInterface) AggregateDistanceServiceClient {
-	return &aggregateDistanceServiceClient{cc}
+func NewAggregatorClient(cc grpc.ClientConnInterface) AggregatorClient {
+	return &aggregatorClient{cc}
 }
 
-func (c *aggregateDistanceServiceClient) DistanceAggregator(ctx context.Context, in *AggregateDistanceRequest, opts ...grpc.CallOption) (*None, error) {
+func (c *aggregatorClient) Aggregate(ctx context.Context, in *AggregateRequest, opts ...grpc.CallOption) (*None, error) {
 	out := new(None)
-	err := c.cc.Invoke(ctx, AggregateDistanceService_DistanceAggregator_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Aggregator_Aggregate_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// AggregateDistanceServiceServer is the server API for AggregateDistanceService service.
-// All implementations must embed UnimplementedAggregateDistanceServiceServer
+// AggregatorServer is the server API for Aggregator service.
+// All implementations must embed UnimplementedAggregatorServer
 // for forward compatibility
-type AggregateDistanceServiceServer interface {
-	DistanceAggregator(context.Context, *AggregateDistanceRequest) (*None, error)
-	mustEmbedUnimplementedAggregateDistanceServiceServer()
+type AggregatorServer interface {
+	Aggregate(context.Context, *AggregateRequest) (*None, error)
+	mustEmbedUnimplementedAggregatorServer()
 }
 
-// UnimplementedAggregateDistanceServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedAggregateDistanceServiceServer struct {
+// UnimplementedAggregatorServer must be embedded to have forward compatible implementations.
+type UnimplementedAggregatorServer struct {
 }
 
-func (UnimplementedAggregateDistanceServiceServer) DistanceAggregator(context.Context, *AggregateDistanceRequest) (*None, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DistanceAggregator not implemented")
+func (UnimplementedAggregatorServer) Aggregate(context.Context, *AggregateRequest) (*None, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Aggregate not implemented")
 }
-func (UnimplementedAggregateDistanceServiceServer) mustEmbedUnimplementedAggregateDistanceServiceServer() {
-}
+func (UnimplementedAggregatorServer) mustEmbedUnimplementedAggregatorServer() {}
 
-// UnsafeAggregateDistanceServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to AggregateDistanceServiceServer will
+// UnsafeAggregatorServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AggregatorServer will
 // result in compilation errors.
-type UnsafeAggregateDistanceServiceServer interface {
-	mustEmbedUnimplementedAggregateDistanceServiceServer()
+type UnsafeAggregatorServer interface {
+	mustEmbedUnimplementedAggregatorServer()
 }
 
-func RegisterAggregateDistanceServiceServer(s grpc.ServiceRegistrar, srv AggregateDistanceServiceServer) {
-	s.RegisterService(&AggregateDistanceService_ServiceDesc, srv)
+func RegisterAggregatorServer(s grpc.ServiceRegistrar, srv AggregatorServer) {
+	s.RegisterService(&Aggregator_ServiceDesc, srv)
 }
 
-func _AggregateDistanceService_DistanceAggregator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AggregateDistanceRequest)
+func _Aggregator_Aggregate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AggregateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AggregateDistanceServiceServer).DistanceAggregator(ctx, in)
+		return srv.(AggregatorServer).Aggregate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AggregateDistanceService_DistanceAggregator_FullMethodName,
+		FullMethod: Aggregator_Aggregate_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AggregateDistanceServiceServer).DistanceAggregator(ctx, req.(*AggregateDistanceRequest))
+		return srv.(AggregatorServer).Aggregate(ctx, req.(*AggregateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// AggregateDistanceService_ServiceDesc is the grpc.ServiceDesc for AggregateDistanceService service.
+// Aggregator_ServiceDesc is the grpc.ServiceDesc for Aggregator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var AggregateDistanceService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "AggregateDistanceService",
-	HandlerType: (*AggregateDistanceServiceServer)(nil),
+var Aggregator_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "Aggregator",
+	HandlerType: (*AggregatorServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "DistanceAggregator",
-			Handler:    _AggregateDistanceService_DistanceAggregator_Handler,
+			MethodName: "Aggregate",
+			Handler:    _Aggregator_Aggregate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

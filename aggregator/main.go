@@ -4,23 +4,42 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
+	grpcTypes "github.com/petrostrak/freight-mileage-toll-calculation-system/types"
+	"google.golang.org/grpc"
 )
 
 func main() {
-	addr := flag.String("addr", ":3000", "The listen address of the HTTP server")
+	httpAddr := flag.String("httpAddr", ":3000", "The listen address of the HTTP server")
+	grpcAddr := flag.String("grpcAddr", ":3001", "The listen address of the gRPC server")
 	flag.Parse()
 
 	store := NewMemoryStore()
 	svc := NewInvoiceAggregator(store)
 	svc = NewLogMiddleware(svc)
 
-	if err := makeHTTPTransport(*addr, svc); err != nil {
+	go makeGRPCTransport(*grpcAddr, svc)
+
+	if err := makeHTTPTransport(*httpAddr, svc); err != nil {
 		panic(err)
 	}
+}
+
+func makeGRPCTransport(addr string, svc Aggregator) error {
+	fmt.Println("gRPC transport running on port ", addr)
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+	defer ln.Close()
+
+	server := grpc.NewServer([]grpc.ServerOption{}...)
+	grpcTypes.RegisterAggregatorServer(server, NewGRPCAggregatorServer(svc))
+	return server.Serve(ln)
 }
 
 func makeHTTPTransport(addr string, svc Aggregator) error {

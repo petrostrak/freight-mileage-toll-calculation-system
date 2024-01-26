@@ -4,12 +4,12 @@ option go_package = "github.com/petrostrak/freight-mileage-toll-calculation-syst
 
 message None {}
 
-message AggregateDistanceRequest{
+message AggregateRequest{
     int32 ObuID = 1;
     double Value = 2;
     int64 Unix = 3;
 }
 
-service AggregateDistanceService{
-    rpc DistanceAggregator(AggregateDistanceRequest) returns (None);
+service Aggregator{
+    rpc Aggregate(AggregateRequest) returns (None);
 }
