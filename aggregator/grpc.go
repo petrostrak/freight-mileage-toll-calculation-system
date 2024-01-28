@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/proto"
 )
@@ -16,11 +18,11 @@ func NewGRPCAggregatorServer(svc Aggregator) *GRPCAggregatorServer {
 	}
 }
 
-func (s *GRPCAggregatorServer) AggregateDistance(req *proto.AggregateRequest) error {
+func (s *GRPCAggregatorServer) Aggregate(ctx context.Context, req *proto.AggregateRequest) (*proto.None, error) {
 	distance := types.Distance{
 		OBUID: int(req.ObuID),
 		Value: req.Value,
 		Unix:  req.Unix,
 	}
-	return s.svc.AggregateDistance(distance)
+	return &proto.None{}, s.svc.AggregateDistance(distance)
 }

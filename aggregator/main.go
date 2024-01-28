@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/petrostrak/freight-mileage-toll-calculation-system/aggregator/client"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/proto"
 	"google.golang.org/grpc"
@@ -22,8 +26,22 @@ func main() {
 	svc := NewInvoiceAggregator(store)
 	svc = NewLogMiddleware(svc)
 
-	go makeGRPCTransport(*grpcAddr, svc)
+	go func() {
+		log.Fatal(makeGRPCTransport(*grpcAddr, svc))
+	}()
 
+	c, err := client.NewGRPCClient(*grpcAddr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err = c.Aggregate(context.Background(), &proto.AggregateRequest{
+		ObuID: 1,
+		Value: 55.44,
+		Unix:  time.Now().UnixNano(),
+	}); err != nil {
+		log.Fatal(err)
+	}
 	if err := makeHTTPTransport(*httpAddr, svc); err != nil {
 		panic(err)
 	}
