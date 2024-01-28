@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/aggregator/client"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
+	"github.com/petrostrak/freight-mileage-toll-calculation-system/proto"
 	"github.com/sirupsen/logrus"
 )
 
@@ -14,10 +16,10 @@ type KafkaConsumer struct {
 	consumer          *kafka.Consumer
 	isRunning         bool
 	calculatorService Calculator
-	aggregationClient *client.HTTPClient
+	aggregationClient client.Clienter
 }
 
-func NewKafkaConsumer(topic string, srv Calculator, aggClient *client.HTTPClient) (*KafkaConsumer, error) {
+func NewKafkaConsumer(topic string, srv Calculator, aggClient client.Clienter) (*KafkaConsumer, error) {
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": "localhost",
 		"group.id":          "myGroup",
@@ -62,13 +64,13 @@ func (c *KafkaConsumer) readMessageLoop() {
 			continue
 		}
 
-		req := types.Distance{
+		req := &proto.AggregateRequest{
 			Value: distance,
-			OBUID: data.OBUID,
+			ObuID: int32(data.OBUID),
 			Unix:  time.Now().UnixNano(),
 		}
 
-		if err = c.aggregationClient.AggregateInvoice(req); err != nil {
+		if err = c.aggregationClient.Aggregate(context.Background(), req); err != nil {
 			logrus.Errorf("aggregate error: %s", err)
 			continue
 		}

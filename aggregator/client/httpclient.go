@@ -2,11 +2,12 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
+	"github.com/petrostrak/freight-mileage-toll-calculation-system/proto"
 )
 
 type HTTPClient struct {
@@ -19,8 +20,8 @@ func NewHTTPClient(endpoint string) *HTTPClient {
 	}
 }
 
-func (c *HTTPClient) AggregateInvoice(distance types.Distance) error {
-	b, err := json.Marshal(distance)
+func (c *HTTPClient) Aggregate(ctx context.Context, aggregationReq *proto.AggregateRequest) error {
+	b, err := json.Marshal(aggregationReq)
 	if err != nil {
 		return err
 	}
