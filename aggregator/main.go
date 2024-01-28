@@ -35,13 +35,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if _, err = c.Aggregate(context.Background(), &proto.AggregateRequest{
+	if err = c.Aggregate(context.Background(), &proto.AggregateRequest{
 		ObuID: 1,
 		Value: 55.44,
 		Unix:  time.Now().UnixNano(),
 	}); err != nil {
 		log.Fatal(err)
 	}
+
 	if err := makeHTTPTransport(*httpAddr, svc); err != nil {
 		panic(err)
 	}
