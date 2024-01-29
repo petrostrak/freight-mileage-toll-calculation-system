@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
 
+	"github.com/petrostrak/freight-mileage-toll-calculation-system/aggregator/client"
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,15 +17,28 @@ func main() {
 	addr := flag.String("addr", "6001", "the listen address of the gateway server")
 	flag.Parse()
 
-	http.HandleFunc("/invoice", makeAPIFunc(handleGetInvoice))
+	client := client.NewHTTPClient("TODO")
+	invHandler := newInvoiceHandler(client)
+	http.HandleFunc("/invoice", makeAPIFunc(invHandler.handleGetInvoice))
 	logrus.Infof("gateway HTTP server is running on port %s", *addr)
 	log.Fatal(http.ListenAndServe(":6001", nil))
 }
 
-func handleGetInvoice(w http.ResponseWriter, r *http.Request) error {
-	return writeJSON(w, http.StatusOK, map[string]any{
-		"invoice": "an invoice",
-	})
+type InvoiceHandler struct {
+	client client.Clienter
+}
+
+func newInvoiceHandler(client client.Clienter) *InvoiceHandler {
+	return &InvoiceHandler{client}
+}
+
+func (h *InvoiceHandler) handleGetInvoice(w http.ResponseWriter, r *http.Request) error {
+	inv, err := h.client.GetInvoice(context.Background(), 254)
+	if err != nil {
+		return err
+	}
+
+	return writeJSON(w, http.StatusOK, inv)
 }
 
 func writeJSON(w http.ResponseWriter, code int, v any) error {
