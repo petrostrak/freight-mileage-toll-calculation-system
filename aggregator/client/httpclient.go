@@ -46,7 +46,7 @@ func (c *HTTPClient) GetInvoice(ctx context.Context, id int) (*types.Invoice, er
 	}
 
 	var inv types.Invoice
-	if err = json.NewDecoder(resp.Body).Decode(&inv); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&inv); err != nil {
 		return nil, err
 	}
 

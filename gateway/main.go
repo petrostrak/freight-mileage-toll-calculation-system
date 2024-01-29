@@ -17,7 +17,7 @@ func main() {
 	addr := flag.String("addr", "6001", "the listen address of the gateway server")
 	flag.Parse()
 
-	client := client.NewHTTPClient("http://localhost:3000")
+	client := client.NewHTTPClient("http://127.0.0.1:3000")
 	invHandler := newInvoiceHandler(client)
 	http.HandleFunc("/invoice", makeAPIFunc(invHandler.handleGetInvoice))
 	logrus.Infof("gateway HTTP server is running on port %s", *addr)
@@ -29,7 +29,9 @@ type InvoiceHandler struct {
 }
 
 func newInvoiceHandler(client client.Clienter) *InvoiceHandler {
-	return &InvoiceHandler{client}
+	return &InvoiceHandler{
+		client: client,
+	}
 }
 
 func (h *InvoiceHandler) handleGetInvoice(w http.ResponseWriter, r *http.Request) error {
