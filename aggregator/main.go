@@ -11,6 +11,7 @@ import (
 
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/proto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 )
 
@@ -47,6 +48,7 @@ func makeHTTPTransport(addr string, svc Aggregator) error {
 	fmt.Println("HTTP transport running on port ", addr)
 	http.HandleFunc("/aggregate", handleAggregate(svc))
 	http.HandleFunc("/invoice", handleInvoice(svc))
+	http.Handle("/metrics", promhttp.Handler())
 
 	return http.ListenAndServe(addr, nil)
 }
