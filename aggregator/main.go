@@ -55,7 +55,7 @@ func makeHTTPTransport(addr string, svc Aggregator) error {
 
 func handleInvoice(svc Aggregator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		obuID := r.URL.Query().Get("obu_ID")
+		obuID := r.URL.Query().Get("obuID")
 		if obuID == "" {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing OBUID"})
 			return

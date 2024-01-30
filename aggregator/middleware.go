@@ -30,7 +30,7 @@ func (m *LogMiddleware) AggregateDistance(distance types.Distance) (err error) {
 	return
 }
 
-func (m *LogMiddleware) CalculateInvoice(obu_id int) (invoice *types.Invoice, err error) {
+func (m *LogMiddleware) CalculateInvoice(obuID int) (invoice *types.Invoice, err error) {
 	var (
 		distance float64
 		amount   float64
@@ -45,12 +45,12 @@ func (m *LogMiddleware) CalculateInvoice(obu_id int) (invoice *types.Invoice, er
 		logrus.WithFields(logrus.Fields{
 			"took":           time.Since(start),
 			"err":            err,
-			"obu_ID":         obu_id,
+			"obuID":          obuID,
 			"total_distance": distance,
 			"total_amount":   amount,
 		}).Info("Calculate invoice")
 	}(time.Now())
-	invoice, err = m.next.CalculateInvoice(obu_id)
+	invoice, err = m.next.CalculateInvoice(obuID)
 	return
 }
 

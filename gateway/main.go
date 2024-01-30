@@ -38,7 +38,7 @@ func newInvoiceHandler(client client.Clienter) *InvoiceHandler {
 }
 
 func (h *InvoiceHandler) handleGetInvoice(w http.ResponseWriter, r *http.Request) error {
-	id, err := strconv.Atoi(r.URL.Query().Get("obu_ID"))
+	id, err := strconv.Atoi(r.URL.Query().Get("obuID"))
 	if err != nil {
 		return err
 	}

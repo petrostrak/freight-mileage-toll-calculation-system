@@ -29,21 +29,21 @@ func NewInvoiceAggregator(store Storer) Aggregator {
 
 func (i *InvoiceAggregator) AggregateDistance(distance types.Distance) error {
 	logrus.WithFields(logrus.Fields{
-		"obu_ID":    distance.OBUID,
+		"obuID":     distance.OBUID,
 		"obu_Value": distance.Value,
 		"obu_Unix":  distance.Unix,
 	}).Info("processing and inserting distance in DB")
 	return i.store.Insert(distance)
 }
 
-func (i *InvoiceAggregator) CalculateInvoice(obu_ID int) (*types.Invoice, error) {
-	distance, err := i.store.Get(obu_ID)
+func (i *InvoiceAggregator) CalculateInvoice(obuID int) (*types.Invoice, error) {
+	distance, err := i.store.Get(obuID)
 	if err != nil {
 		return nil, err
 	}
 
 	invoice := &types.Invoice{
-		OBUID:         obu_ID,
+		OBUID:         obuID,
 		TotalDistance: distance,
 		TotalAmount:   baseFee * distance,
 	}
