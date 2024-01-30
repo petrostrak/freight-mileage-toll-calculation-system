@@ -27,19 +27,6 @@ func main() {
 		log.Fatal(makeGRPCTransport(*grpcAddr, svc))
 	}()
 
-	// c, err := client.NewGRPCClient(*grpcAddr)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// if err = c.Aggregate(context.Background(), &proto.AggregateRequest{
-	// 	ObuID: 1,
-	// 	Value: 55.44,
-	// 	Unix:  time.Now().UnixNano(),
-	// }); err != nil {
-	// 	log.Fatal(err)
-	// }
-
 	log.Fatal(makeHTTPTransport(*httpAddr, svc))
 }
 
