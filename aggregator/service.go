@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
+	"github.com/sirupsen/logrus"
 )
 
 const baseFee = 3.45
@@ -29,7 +28,11 @@ func NewInvoiceAggregator(store Storer) Aggregator {
 }
 
 func (i *InvoiceAggregator) AggregateDistance(distance types.Distance) error {
-	fmt.Printf("processing and inserting distance in DB [ID:%d | Value: %.2f | Unix: %d]\n", distance.OBUID, distance.Value, distance.Unix)
+	logrus.WithFields(logrus.Fields{
+		"obu_ID":    distance.OBUID,
+		"obu_Value": distance.Value,
+		"obu_Unix":  distance.Unix,
+	}).Info("processing and inserting distance in DB")
 	return i.store.Insert(distance)
 }
 
