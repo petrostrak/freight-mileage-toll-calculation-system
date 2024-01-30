@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/aggregator/client"
@@ -15,7 +17,7 @@ import (
 type apiFunc func(w http.ResponseWriter, r *http.Request) error
 
 func main() {
-	addr := flag.String("addr", ":6001", "the listen address of the gateway HTTP server")
+	addr := flag.String("addr", ":6000", "the listen address of the gateway HTTP server")
 	aggregatorServiceAddr := flag.String("aggServiceAddr", "http://127.0.0.1:3000", "the address of the aggregator service")
 	flag.Parse()
 
@@ -24,7 +26,7 @@ func main() {
 
 	http.HandleFunc("/invoice", makeAPIFunc(invoiceHandler.handleGetInvoice))
 	logrus.Infof("gateway HTTP server running on port %s", *addr)
-	log.Fatal(http.ListenAndServe(":6001", nil))
+	log.Fatal(http.ListenAndServe(*addr, nil))
 }
 
 type InvoiceHandler struct {
@@ -36,8 +38,13 @@ func newInvoiceHandler(client client.Clienter) *InvoiceHandler {
 }
 
 func (h *InvoiceHandler) handleGetInvoice(w http.ResponseWriter, r *http.Request) error {
-	// access aggregator client
-	inv, err := h.client.GetInvoice(context.Background(), 1243124)
+	id, err := strconv.Atoi(r.URL.Query().Get("obu_ID"))
+	if err != nil {
+		return err
+	}
+
+	inv, err := h.client.GetInvoice(context.Background(), id)
+	fmt.Println(inv)
 	if err != nil {
 		return err
 	}
@@ -63,7 +70,7 @@ func makeAPIFunc(fn apiFunc) http.HandlerFunc {
 		}(time.Now())
 		if err := fn(w, r); err != nil {
 			writeJSON(w, http.StatusInternalServerError, map[string]any{
-				"error": err,
+				"error": err.Error(),
 			})
 		}
 	}

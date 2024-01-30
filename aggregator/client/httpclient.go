@@ -31,7 +31,7 @@ func (c *HTTPClient) GetInvoice(ctx context.Context, id int) (*types.Invoice, er
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", c.Endpoint, bytes.NewReader(b))
+	req, err := http.NewRequest("POST", c.Endpoint+"/invoice", bytes.NewReader(b))
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (c *HTTPClient) Aggregate(ctx context.Context, aggregationReq *proto.Aggreg
 		return err
 	}
 
-	req, err := http.NewRequest("POST", c.Endpoint, bytes.NewReader(b))
+	req, err := http.NewRequest("POST", c.Endpoint+"/aggregate", bytes.NewReader(b))
 	if err != nil {
 		return err
 	}
