@@ -22,15 +22,40 @@ func NewHTTPClient(endpoint string) *HTTPClient {
 }
 
 func (c *HTTPClient) GetInvoice(ctx context.Context, id int) (*types.Invoice, error) {
-	return &types.Invoice{
-		OBUID:         id,
-		TotalDistance: 1450.60,
-		TotalAmount:   5600.10,
-	}, nil
+	invoiceReq := proto.GetInvoiceRequest{
+		ObuID: int32(id),
+	}
+
+	b, err := json.Marshal(&invoiceReq)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", c.Endpoint, bytes.NewReader(b))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("the service responded with non 200 status code %d", resp.StatusCode)
+	}
+
+	var inv types.Invoice
+	if err := json.NewDecoder(resp.Body).Decode(&inv); err != nil {
+		return nil, err
+	}
+
+	return &inv, nil
 }
 
 func (c *HTTPClient) Aggregate(ctx context.Context, aggregationReq *proto.AggregateRequest) error {
-	b, err := json.Marshal(aggregationReq)
+	b, err := json.Marshal(&aggregationReq)
 	if err != nil {
 		return err
 	}
@@ -44,6 +69,8 @@ func (c *HTTPClient) Aggregate(ctx context.Context, aggregationReq *proto.Aggreg
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("the service responded with non 200 status code %d", resp.StatusCode)
 	}
