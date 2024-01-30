@@ -34,5 +34,5 @@ make obu
 ```
 Now, based on a `obu_ID` we can make a request to the `Invoicer Calculator` and get the total distance and amount:
 ```bash
-curl http://localhost:3000/invoice?obu_ID=6650711713076780301
+curl http://localhost:3010/invoice?obu_ID=6650711713076780301
 ```
