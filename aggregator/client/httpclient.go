@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/proto"
 )
 
@@ -18,6 +19,14 @@ func NewHTTPClient(endpoint string) *HTTPClient {
 	return &HTTPClient{
 		Endpoint: endpoint,
 	}
+}
+
+func (c *HTTPClient) GetInvoice(ctx context.Context, id int) (*types.Invoice, error) {
+	return &types.Invoice{
+		OBUID:         id,
+		TotalDistance: 1450.60,
+		TotalAmount:   5600.10,
+	}, nil
 }
 
 func (c *HTTPClient) Aggregate(ctx context.Context, aggregationReq *proto.AggregateRequest) error {
