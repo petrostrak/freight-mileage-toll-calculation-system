@@ -33,7 +33,7 @@ func writeJSON(w http.ResponseWriter, code int, v any) error {
 func makeAPIFunc(fn apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := fn(w, r); err != nil {
-			writeJSON(w, http.StatusOK, map[string]any{
+			writeJSON(w, http.StatusInternalServerError, map[string]any{
 				"error": err,
 			})
 		}
