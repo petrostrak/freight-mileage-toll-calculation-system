@@ -26,8 +26,8 @@ func (m *LogMiddleware) AggregateDistance(distance types.Distance) (err error) {
 			"err":  err,
 		}).Info("aggregate distance")
 	}(time.Now())
-	err = m.next.AggregateDistance(distance)
-	return
+
+	return m.next.AggregateDistance(distance)
 }
 
 func (m *LogMiddleware) CalculateInvoice(obuID int) (invoice *types.Invoice, err error) {
@@ -50,37 +50,65 @@ func (m *LogMiddleware) CalculateInvoice(obuID int) (invoice *types.Invoice, err
 			"total_amount":   amount,
 		}).Info("Calculate invoice")
 	}(time.Now())
+
 	invoice, err = m.next.CalculateInvoice(obuID)
 	return
 }
 
 type MetricsMiddleware struct {
-	reqCounter prometheus.Counter
-	reqLatency prometheus.Histogram
-	next       Aggregator
+	reqCounterAgg  prometheus.Counter
+	reqCounterCalc prometheus.Counter
+	reqLatencyAgg  prometheus.Histogram
+	reqLatencyCalc prometheus.Histogram
+	next           Aggregator
 }
 
 func NewMetricsMiddleware(next Aggregator) *MetricsMiddleware {
-	reqCounter := promauto.NewCounter(prometheus.CounterOpts{
+	reqCounterAgg := promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: "aggregator_request_counter",
-		Name:      "aggregator_request_counter",
+		Name:      "aggregate",
 	})
-	reqLatency := promauto.NewHistogram(prometheus.HistogramOpts{
+
+	reqCounterCalc := promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: "aggregator_request_counter",
-		Name:      "aggregator_request_counter",
+		Name:      "calculate",
+	})
+
+	reqLatencyAgg := promauto.NewHistogram(prometheus.HistogramOpts{
+		Namespace: "aggregator_request_counter",
+		Name:      "aggregate",
 		Buckets:   []float64{0.1, 0.5, 1},
 	})
+
+	reqLatencyCalc := promauto.NewHistogram(prometheus.HistogramOpts{
+		Namespace: "aggregator_request_counter",
+		Name:      "calclulate",
+		Buckets:   []float64{0.1, 0.5, 1},
+	})
+
 	return &MetricsMiddleware{
-		next:       next,
-		reqCounter: reqCounter,
-		reqLatency: reqLatency,
+		next:           next,
+		reqCounterAgg:  reqCounterAgg,
+		reqCounterCalc: reqCounterCalc,
+		reqLatencyAgg:  reqLatencyAgg,
+		reqLatencyCalc: reqLatencyCalc,
 	}
 }
 
 func (m *MetricsMiddleware) AggregateDistance(distance types.Distance) error {
+	defer func(start time.Time) {
+		m.reqLatencyAgg.Observe(float64(time.Since(start).Seconds()))
+		m.reqCounterAgg.Inc()
+	}(time.Now())
+
 	return m.next.AggregateDistance(distance)
 }
 
 func (m *MetricsMiddleware) CalculateInvoice(obuID int) (*types.Invoice, error) {
+	defer func(start time.Time) {
+		m.reqLatencyCalc.Observe(float64(time.Since(start).Seconds()))
+		m.reqCounterCalc.Inc()
+	}(time.Now())
+
 	return m.next.CalculateInvoice(obuID)
 }
