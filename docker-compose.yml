@@ -46,5 +46,67 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=grafana
     volumes:
       - ./grafana:/etc/grafana/provisioning/datasources
+
+  aggregator:
+    container_name: aggregator
+    build:
+      context: .
+      dockerfile: aggregator/Dockerfile
+    restart: always
+    ports:
+      - 3010:3010
+      - 3011:3011
+    networks:
+      - backend
+
+  gateway:
+    container_name: gateway
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    restart: always
+    ports:
+      - 6000:6000
+    networks:
+      - backend
+
+  obu:
+    container_name: obu
+    build:
+      context: .
+      dockerfile: obu/Dockerfile
+    restart: always
+    ports:
+      - 30000:30000
+    networks:
+      - backend
+
+  receiver:
+    container_name: receiver
+    build:
+      context: .
+      dockerfile: receiver/Dockerfile
+    restart: always
+    ports:
+      - 4000:4000
+    networks:
+      - backend
+
+  distance_calculator:
+    container_name: distance_calculator
+    build:
+      context: .
+      dockerfile: distance_calculator/Dockerfile
+    restart: always
+    ports:
+      - 4001:4001
+    networks:
+      - backend
+
+networks:
+  backend:
+    name: backend-network
+    driver: bridge
+
 volumes:
   prom_data:
