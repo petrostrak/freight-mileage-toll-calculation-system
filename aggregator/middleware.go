@@ -75,14 +75,16 @@ func NewMetricsMiddleware(next Aggregator) *MetricsMiddleware {
 	})
 
 	reqLatencyAgg := promauto.NewHistogram(prometheus.HistogramOpts{
-		Namespace: "aggregator_request_counter",
+		Namespace: "aggregate_request_latency",
 		Name:      "aggregate",
+		Help:      "The request latency",
 		Buckets:   []float64{0.1, 0.5, 1},
 	})
 
 	reqLatencyCalc := promauto.NewHistogram(prometheus.HistogramOpts{
-		Namespace: "aggregator_request_counter",
-		Name:      "calclulate",
+		Namespace: "aggregate_request_latency",
+		Name:      "calculate",
+		Help:      "The request latency",
 		Buckets:   []float64{0.1, 0.5, 1},
 	})
 
