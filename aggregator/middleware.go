@@ -56,6 +56,8 @@ func (m *LogMiddleware) CalculateInvoice(obuID int) (invoice *types.Invoice, err
 }
 
 type MetricsMiddleware struct {
+	errCounterAgg  prometheus.Counter
+	errCounterCalc prometheus.Counter
 	reqCounterAgg  prometheus.Counter
 	reqCounterCalc prometheus.Counter
 	reqLatencyAgg  prometheus.Histogram
@@ -64,6 +66,16 @@ type MetricsMiddleware struct {
 }
 
 func NewMetricsMiddleware(next Aggregator) *MetricsMiddleware {
+	errCounterAgg := promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: "aggregator_error_counter",
+		Name:      "aggregate",
+	})
+
+	errCounterCalc := promauto.NewCounter(prometheus.CounterOpts{
+		Namespace: "aggregator_error_counter",
+		Name:      "calculate",
+	})
+
 	reqCounterAgg := promauto.NewCounter(prometheus.CounterOpts{
 		Namespace: "aggregator_request_counter",
 		Name:      "aggregate",
@@ -90,6 +102,8 @@ func NewMetricsMiddleware(next Aggregator) *MetricsMiddleware {
 
 	return &MetricsMiddleware{
 		next:           next,
+		errCounterAgg:  errCounterAgg,
+		errCounterCalc: errCounterCalc,
 		reqCounterAgg:  reqCounterAgg,
 		reqCounterCalc: reqCounterCalc,
 		reqLatencyAgg:  reqLatencyAgg,
@@ -97,19 +111,25 @@ func NewMetricsMiddleware(next Aggregator) *MetricsMiddleware {
 	}
 }
 
-func (m *MetricsMiddleware) AggregateDistance(distance types.Distance) error {
+func (m *MetricsMiddleware) AggregateDistance(distance types.Distance) (err error) {
 	defer func(start time.Time) {
 		m.reqLatencyAgg.Observe(float64(time.Since(start).Seconds()))
 		m.reqCounterAgg.Inc()
+		if err != nil {
+			m.errCounterAgg.Inc()
+		}
 	}(time.Now())
 
 	return m.next.AggregateDistance(distance)
 }
 
-func (m *MetricsMiddleware) CalculateInvoice(obuID int) (*types.Invoice, error) {
+func (m *MetricsMiddleware) CalculateInvoice(obuID int) (inv *types.Invoice, err error) {
 	defer func(start time.Time) {
 		m.reqLatencyCalc.Observe(float64(time.Since(start).Seconds()))
 		m.reqCounterCalc.Inc()
+		if err != nil {
+			m.errCounterCalc.Inc()
+		}
 	}(time.Now())
 
 	return m.next.CalculateInvoice(obuID)
