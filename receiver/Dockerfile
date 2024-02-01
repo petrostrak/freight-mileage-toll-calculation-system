@@ -1,8 +1,8 @@
-FROM golang:1.21
+FROM --platform=linux/amd64 golang:1.21
 
 # Set necessary environmet variables needed for our image
 ENV GO111MODULE=on \
-    CGO_ENABLED=0 \
+    CGO_ENABLED=1 \
     GOOS=linux \
     GOARCH=amd64
 
