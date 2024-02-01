@@ -7,9 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"strconv"
 
-	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/proto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
@@ -52,55 +50,6 @@ func makeHTTPTransport(addr string, svc Aggregator) error {
 	http.Handle("/metrics", promhttp.Handler())
 
 	return http.ListenAndServe(addr, nil)
-}
-
-func handleInvoice(svc Aggregator) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "method not supported"})
-			return
-		}
-
-		obuID := r.URL.Query().Get("obuID")
-		if obuID == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing OBUID"})
-			return
-		}
-
-		id, err := strconv.Atoi(obuID)
-		if err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid OBUID"})
-			return
-		}
-
-		invoice, err := svc.CalculateInvoice(id)
-		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
-		}
-
-		writeJSON(w, http.StatusOK, invoice)
-	}
-}
-
-func handleAggregate(svc Aggregator) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "method not supported"})
-			return
-		}
-
-		var distance types.Distance
-		if err := json.NewDecoder(r.Body).Decode(&distance); err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
-		}
-
-		if err := svc.AggregateDistance(distance); err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
-		}
-	}
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) error {
