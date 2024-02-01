@@ -10,17 +10,44 @@ import (
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/sirupsen/logrus"
 )
+
+type HTTPFunc func(w http.ResponseWriter, r *http.Request) error
+
+type APIError struct {
+	Code int
+	Err  error
+}
+
+func (e APIError) Error() string {
+	return e.Err.Error()
+}
 
 type HTTPMetricHandler struct {
 	reqCounter prometheus.Counter
+	errCounter prometheus.Counter
 	reqLatency prometheus.Histogram
+}
+
+func makeHTTPHandlerFunc(fn HTTPFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := fn(w, r); err != nil {
+			if APIError, ok := err.(*APIError); ok {
+				writeJSON(w, APIError.Code, APIError)
+			}
+		}
+	}
 }
 
 func newHTTPMetricsHandler(reqName string) *HTTPMetricHandler {
 	return &HTTPMetricHandler{
 		reqCounter: promauto.NewCounter(prometheus.CounterOpts{
 			Namespace: fmt.Sprintf("http_%s_%s_", reqName, "request_counter"),
+			Name:      "aggregator",
+		}),
+		errCounter: promauto.NewCounter(prometheus.CounterOpts{
+			Namespace: fmt.Sprintf("http_%s_%s", reqName, "err_counter"),
 			Name:      "aggregator",
 		}),
 		reqLatency: promauto.NewHistogram(prometheus.HistogramOpts{
@@ -31,61 +58,85 @@ func newHTTPMetricsHandler(reqName string) *HTTPMetricHandler {
 	}
 }
 
-func (h *HTTPMetricHandler) instrument(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (h *HTTPMetricHandler) instrument(next HTTPFunc) HTTPFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		var err error
 		defer func(start time.Time) {
+			logrus.WithFields(logrus.Fields{
+				"latency": time.Since(start).Seconds(),
+				"request": r.RequestURI,
+			}).Info()
 			h.reqLatency.Observe(float64(time.Since(start).Seconds()))
+			h.reqCounter.Inc()
+			if err != nil {
+				h.errCounter.Inc()
+			}
 		}(time.Now())
-		h.reqCounter.Inc()
-		next(w, r)
+		return next(w, r)
 	}
 }
 
-func handleInvoice(svc Aggregator) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func handleInvoice(svc Aggregator) HTTPFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		if r.Method != "GET" {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "method not supported"})
-			return
+			return APIError{
+				Code: http.StatusBadRequest,
+				Err:  fmt.Errorf("invalid HTTP method %s", r.Method),
+			}
 		}
 
 		obuID := r.URL.Query().Get("obuID")
 		if obuID == "" {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing OBUID"})
-			return
+			return APIError{
+				Code: http.StatusBadRequest,
+				Err:  fmt.Errorf("missing obuID"),
+			}
 		}
 
 		id, err := strconv.Atoi(obuID)
 		if err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid OBUID"})
-			return
+			return APIError{
+				Code: http.StatusBadRequest,
+				Err:  fmt.Errorf("invalid obuID"),
+			}
 		}
 
 		invoice, err := svc.CalculateInvoice(id)
 		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
+			return APIError{
+				Code: http.StatusBadRequest,
+				Err:  err,
+			}
 		}
 
-		writeJSON(w, http.StatusOK, invoice)
+		return writeJSON(w, http.StatusOK, invoice)
 	}
 }
 
-func handleAggregate(svc Aggregator) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func handleAggregate(svc Aggregator) HTTPFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		if r.Method != "POST" {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": "method not supported"})
-			return
+			return APIError{
+				Code: http.StatusBadRequest,
+				Err:  fmt.Errorf("method not supported"),
+			}
 		}
 
 		var distance types.Distance
 		if err := json.NewDecoder(r.Body).Decode(&distance); err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
+			return APIError{
+				Code: http.StatusBadRequest,
+				Err:  err,
+			}
 		}
 
 		if err := svc.AggregateDistance(distance); err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
+			return APIError{
+				Code: http.StatusInternalServerError,
+				Err:  err,
+			}
 		}
+
+		return writeJSON(w, http.StatusOK, map[string]any{"msg": "ok"})
 	}
 }
