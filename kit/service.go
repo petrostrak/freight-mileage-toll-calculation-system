@@ -11,18 +11,38 @@ type Service interface {
 	Calculate(context.Context, int) (*types.Invoice, error)
 }
 
-type BasicService struct{}
+const basePrice = 3.15
 
-func newBasicService() Service {
-	return &BasicService{}
+type Storer interface {
+	Insert(types.Distance) error
+	Get(int) (float64, error)
+}
+
+type BasicService struct {
+	store Storer
+}
+
+func newBasicService(store Storer) Service {
+	return &BasicService{store: store}
 }
 
 func (svc *BasicService) Aggregate(ctx context.Context, dist types.Distance) error {
-	return nil
+	return svc.store.Insert(dist)
 }
 
-func (svc *BasicService) Calculate(context.Context, int) (*types.Invoice, error) {
-	return nil, nil
+func (svc *BasicService) Calculate(ctx context.Context, obuID int) (*types.Invoice, error) {
+	dist, err := svc.store.Get(obuID)
+	if err != nil {
+		return nil, err
+	}
+
+	inv := &types.Invoice{
+		OBUID:         obuID,
+		TotalDistance: dist,
+		TotalAmount:   basePrice * dist,
+	}
+
+	return inv, nil
 }
 
 // NewAggregatorService will construct a complete microservice
@@ -30,7 +50,7 @@ func (svc *BasicService) Calculate(context.Context, int) (*types.Invoice, error)
 func NewAggregatorService() Service {
 	var svc Service
 	{
-		svc = newBasicService()
+		svc = newBasicService(NewMemoryStore())
 		svc = newLoggingsMiddleware()(svc)
 		svc = newInstrumentationMiddleware()(svc)
 	}
