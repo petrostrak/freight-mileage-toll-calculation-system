@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/petrostrak/freight-mileage-toll-calculation-system/kit/aggsvc/aggservice"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
 )
 
@@ -29,6 +30,19 @@ func (s Set) Aggregate(ctx context.Context, dist types.Distance) error {
 	}
 
 	return nil
+}
+
+func MakeAggregateEndpoint(s aggservice.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request any) (response any, err error) {
+		req := request.(AggregateRequest)
+		err = s.Aggregate(ctx, types.Distance{
+			OBUID: req.OBUID,
+			Value: req.Value,
+			Unix:  req.Unix,
+		})
+
+		return
+	}
 }
 
 type CalculateRequest struct {
