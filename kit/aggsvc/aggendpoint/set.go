@@ -19,6 +19,10 @@ type AggregateRequest struct {
 	Unix  int64   `json:"unix"`
 }
 
+type AggregateResponse struct {
+	Err error `json:"err"`
+}
+
 func (s Set) Aggregate(ctx context.Context, dist types.Distance) error {
 	_, err := s.AggregateEndpoint(ctx, AggregateRequest{
 		OBUID: dist.OBUID,
@@ -41,7 +45,7 @@ func MakeAggregateEndpoint(s aggservice.Service) endpoint.Endpoint {
 			Unix:  req.Unix,
 		})
 
-		return
+		return AggregateResponse{Err: err}, nil
 	}
 }
 
@@ -71,4 +75,17 @@ func (s Set) Calculate(ctx context.Context, obuID int) (*types.Invoice, error) {
 		TotalDistance: result.TotalDistance,
 		TotalAmount:   result.TotalAmount,
 	}, nil
+}
+
+func MakeCaclulateEndpoint(s aggservice.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request any) (response any, err error) {
+		req := request.(CalculateRequest)
+		inv, err := s.Calculate(ctx, req.OBUID)
+		return CalculateResponse{
+			Err:           err,
+			OBUID:         inv.OBUID,
+			TotalDistance: inv.TotalDistance,
+			TotalAmount:   inv.TotalAmount,
+		}, nil
+	}
 }
