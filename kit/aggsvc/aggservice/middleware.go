@@ -26,7 +26,7 @@ func newLoggingsMiddleware(logger log.Logger) Middleware {
 
 func (l loggingMiddleware) Aggregate(ctx context.Context, dist types.Distance) (err error) {
 	defer func(start time.Time) {
-		l.log.Log("took:", time.Since(start), "obuID", dist.OBUID, "distance", dist.Value, "err", err)
+		l.log.Log("method", "Aggregate", "took:", time.Since(start), "obuID", dist.OBUID, "distance", dist.Value, "err", err)
 	}(time.Now())
 	err = l.next.Aggregate(ctx, dist)
 	return
