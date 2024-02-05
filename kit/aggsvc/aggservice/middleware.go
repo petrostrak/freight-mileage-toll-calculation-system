@@ -40,10 +40,10 @@ func newInstrumentationMiddleware() Middleware {
 	}
 }
 
-func (i instrumentationMiddleware) Aggregate(_ context.Context, dist types.Distance) error {
-	return nil
+func (i instrumentationMiddleware) Aggregate(ctx context.Context, dist types.Distance) error {
+	return i.next.Aggregate(ctx, dist)
 }
 
-func (i instrumentationMiddleware) Calculate(_ context.Context, dist int) (*types.Invoice, error) {
-	return nil, nil
+func (i instrumentationMiddleware) Calculate(ctx context.Context, dist int) (*types.Invoice, error) {
+	return i.next.Calculate(ctx, dist)
 }
