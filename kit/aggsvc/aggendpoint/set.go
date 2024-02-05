@@ -6,10 +6,12 @@ import (
 
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/metrics/prometheus"
 	"github.com/go-kit/kit/ratelimit"
 	"github.com/go-kit/log"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/kit/aggsvc/aggservice"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/sony/gobreaker"
 	"golang.org/x/time/rate"
 )
@@ -97,12 +99,20 @@ func MakeCaclulateEndpoint(s aggservice.Service) endpoint.Endpoint {
 }
 
 func New(svc aggservice.Service, logger log.Logger) Set {
+	ducation := prometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+		Namespace: "freight_mileage_toll_calculation_system",
+		Subsystem: "aggservice",
+		Name:      "request_duration_seconds",
+		Help:      "Request duration in seconds",
+	}, []string{"method", "success"})
+
 	var aggregateEndpoint endpoint.Endpoint
 	{
 		aggregateEndpoint = MakeAggregateEndpoint(svc)
 		aggregateEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(aggregateEndpoint)
 		aggregateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(aggregateEndpoint)
 		aggregateEndpoint = LoggingMiddleware(log.With(logger, "method", "Aggregate"))(aggregateEndpoint)
+		aggregateEndpoint = InstrumentatingMiddleware(ducation.With("method", "Aggregate"))(aggregateEndpoint)
 	}
 
 	var calculationEndpoint endpoint.Endpoint
@@ -111,6 +121,7 @@ func New(svc aggservice.Service, logger log.Logger) Set {
 		calculationEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(calculationEndpoint)
 		calculationEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(calculationEndpoint)
 		calculationEndpoint = LoggingMiddleware(log.With(logger, "method", "Invoice"))(calculationEndpoint)
+		calculationEndpoint = InstrumentatingMiddleware(ducation.With("method", "Invoice"))(calculationEndpoint)
 	}
 
 	return Set{

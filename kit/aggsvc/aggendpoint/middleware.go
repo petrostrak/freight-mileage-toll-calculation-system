@@ -5,8 +5,20 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/metrics"
 	"github.com/go-kit/log"
 )
+
+func InstrumentatingMiddleware(duration metrics.Histogram) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, request any) (response any, err error) {
+			defer func(start time.Time) {
+				duration.With("success").Observe(float64(time.Since(start).Seconds()))
+			}(time.Now())
+			return next(ctx, request)
+		}
+	}
+}
 
 func LoggingMiddleware(logger log.Logger) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
