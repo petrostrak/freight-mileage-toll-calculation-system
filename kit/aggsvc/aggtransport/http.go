@@ -64,7 +64,7 @@ func NewHTTPClient(instance string, logger log.Logger) (aggservice.Service, erro
 		).Endpoint()
 		calculateEndpoint = limiter(calculateEndpoint)
 		calculateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "Aggregate",
+			Name:    "Calculate",
 			Timeout: 30 * time.Second,
 		}))(calculateEndpoint)
 	}

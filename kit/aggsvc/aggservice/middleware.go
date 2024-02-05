@@ -20,12 +20,12 @@ func newLoggingsMiddleware() Middleware {
 	}
 }
 
-func (l loggingMiddleware) Aggregate(_ context.Context, dist types.Distance) error {
-	return nil
+func (l loggingMiddleware) Aggregate(ctx context.Context, dist types.Distance) error {
+	return l.next.Aggregate(ctx, dist)
 }
 
-func (l loggingMiddleware) Calculate(_ context.Context, dist int) (*types.Invoice, error) {
-	return nil, nil
+func (l loggingMiddleware) Calculate(ctx context.Context, dist int) (*types.Invoice, error) {
+	return l.next.Calculate(ctx, dist)
 }
 
 type instrumentationMiddleware struct {
