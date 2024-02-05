@@ -2,7 +2,6 @@ package aggservice
 
 import (
 	"context"
-	"os"
 
 	"github.com/go-kit/log"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
@@ -49,12 +48,7 @@ func (svc *BasicService) Calculate(ctx context.Context, obuID int) (*types.Invoi
 
 // NewAggregatorService will construct a complete microservice
 // with logging and instrumentation middleware.
-func New() Service {
-	var logger log.Logger
-	{
-		logger = log.NewLogfmtLogger(os.Stdout)
-		logger = log.With(logger, "service", "aggregator")
-	}
+func New(logger log.Logger) Service {
 	var svc Service
 	{
 		svc = newBasicService(NewMemoryStore())

@@ -102,6 +102,7 @@ func New(svc aggservice.Service, logger log.Logger) Set {
 		aggregateEndpoint = MakeAggregateEndpoint(svc)
 		aggregateEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(aggregateEndpoint)
 		aggregateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(aggregateEndpoint)
+		aggregateEndpoint = LoggingMiddleware(log.With(logger, "method", "Aggregate"))(aggregateEndpoint)
 	}
 
 	var calculationEndpoint endpoint.Endpoint
@@ -109,6 +110,7 @@ func New(svc aggservice.Service, logger log.Logger) Set {
 		calculationEndpoint = MakeAggregateEndpoint(svc)
 		calculationEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(calculationEndpoint)
 		calculationEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(calculationEndpoint)
+		calculationEndpoint = LoggingMiddleware(log.With(logger, "method", "Invoice"))(calculationEndpoint)
 	}
 
 	return Set{
