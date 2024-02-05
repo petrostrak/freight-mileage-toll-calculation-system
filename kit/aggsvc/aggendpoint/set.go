@@ -2,10 +2,16 @@ package aggendpoint
 
 import (
 	"context"
+	"time"
 
+	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/ratelimit"
+	"github.com/go-kit/log"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/kit/aggsvc/aggservice"
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
+	"github.com/sony/gobreaker"
+	"golang.org/x/time/rate"
 )
 
 type Set struct {
@@ -87,5 +93,26 @@ func MakeCaclulateEndpoint(s aggservice.Service) endpoint.Endpoint {
 			TotalDistance: inv.TotalDistance,
 			TotalAmount:   inv.TotalAmount,
 		}, nil
+	}
+}
+
+func New(svc aggservice.Service, logger log.Logger) Set {
+	var aggregateEndpoint endpoint.Endpoint
+	{
+		aggregateEndpoint = MakeAggregateEndpoint(svc)
+		aggregateEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(aggregateEndpoint)
+		aggregateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(aggregateEndpoint)
+	}
+
+	var calculationEndpoint endpoint.Endpoint
+	{
+		calculationEndpoint = MakeAggregateEndpoint(svc)
+		calculationEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(calculationEndpoint)
+		calculationEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(calculationEndpoint)
+	}
+
+	return Set{
+		AggregateEndpoint: aggregateEndpoint,
+		CalculateEndpoint: calculationEndpoint,
 	}
 }
