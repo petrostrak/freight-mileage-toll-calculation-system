@@ -11,6 +11,8 @@ import (
 	"github.com/petrostrak/freight-mileage-toll-calculation-system/obu/types"
 )
 
+const kafkaTopic = "obuData"
+
 func main() {
 	recv, err := NewReceiver()
 	if err != nil {
@@ -27,7 +29,6 @@ type Receiver struct {
 }
 
 func NewReceiver() (*Receiver, error) {
-	var kafkaTopic = "obuData"
 	p, err := NewKafkaProducer(kafkaTopic)
 	if err != nil {
 		return nil, err
